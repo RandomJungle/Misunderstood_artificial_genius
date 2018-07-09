@@ -10,11 +10,10 @@ from nltk.collocations import *
 
 class Misunderstood_genius:
 	
-	def __init__(self, master, language) :
+	def __init__(self, master) :
 		'''	Constructor. master is a string that names a directory in the same repository that contains all the work from inspiration
 		'''	
 		self.master = 'masters/' + master
-		slef.language = language
 		self.reader = PlaintextCorpusReader(self.master, r'.*', encoding='utf-8')
 		self.text = self.reader.words()
 		
@@ -47,7 +46,7 @@ class Misunderstood_genius:
 		if language == 'french':
 			pattern = re.sub('', '', pattern)
 		elif language == 'english':
-				
+			pass
 
 	def text_generator(self, word, num=10):
 		''' write a text based on a random choice of word that appear in collocation in master's work
@@ -63,25 +62,29 @@ class Misunderstood_genius:
 			word = random.choice(word_collocates)
 		return verse
 	
-	def rhyme_generator(self, word, rhyme, foot=12):
-		''' write a verse based on previous word used. For now it doesn't actually counts in foot, change that
+	def rhyme_generator(self, word, rhyme=None, foot=12):
+		''' write a verse based on previous word used
 		'''	
 		verse = ""
 		counted_foot = 0
 		bigrams = nltk.bigrams(self.text)
 		cfdist = nltk.ConditionalFreqDist(bigrams)
 		continueWriting = True
+		if rhyme is None :
+			rhyme = random.choice([word for word in self.text if (len(word) > 3 and re.match('[a-zA-Z]', word))])[-3:]
 		while continueWriting:
-			verse += word + ' '
 			word_collocates = []
 			for w in cfdist[word] :
 				word_collocates.append(w)
 			if counted_foot < foot-2 :
 				word = random.choice(word_collocates)
+				verse += word + ' '
 			else :
-				rhyming_collocate = [word for word in word_collocates if word.endswith(rhyme) and self.count_foot(word) == 2]
+				rhyming_collocates = [word for word in word_collocates if word.endswith(rhyme) and self.count_foot(word) == 2]
+				if not rhyming_collocates:
+					rhyming_collocates = [word for word in self.text if word.endswith(rhyme) and self.count_foot(word) == 2]
 				word = random.choice(rhyming_collocates)
-				verse += word 
+				verse += word + ' '
 				continueWriting= False
 			counted_foot += self.count_foot(word)
 		return verse
@@ -120,11 +123,26 @@ class Misunderstood_genius:
 		return final_work
 	
 	def compose_rhyming_poem(self, length, foot):
-		''' write a poem that rhymes
+		''' write a poem that rhymes. For now we use a simple rhyming techniques : AABBCCDD (it's boring but it's simple)
+			Also the phonetics aren't fully implemented yet, so for now rhymes are based on the 3 last letters from previous verse
+			EXTRA tricky for french with all usual mute letters that we love so much
 		'''	
-		final_work = ""
+		final_work = []
 		first_word = random.choice([w.lower() for w in self.text if re.search('[a-zA-Z]', w) is not None])
-		first_verse = self.rhyme_generator(word=first_word, foot=12, rhyme='oi')
+		verse = self.rhyme_generator(word=first_word, foot=12, rhyme=None)
+		final_work.append(verse)
+		first_word = verse.split(' ')[-2]
+		previous_rhyme = verse[-3]
+		for i in range(2,length):
+			if i%2 != 0:
+				verse = self.rhyme_generator(word=first_word, rhyme=None)
+				previous_rhyme = verse[-3]
+				final_work.append(verse)
+			else:
+				verse = self.rhyme_generator(word=first_word, rhyme=previous_rhyme)
+				final_work.append(verse)
+		final_work = "\n".join(final_work)
+		return final_work
 			
 	
 	def find_title(self):
@@ -135,17 +153,17 @@ class Misunderstood_genius:
 		title = self.text_generator(word=first_word, num=length)
 		return title
 			
-	def draft_manuscript(self, title, func, length):
+	def draft_manuscript(self, title, func, **kwargs):
 		'''	write a piece of text to a file, send it to everyone in town and wait for the letters of rejection
 		'''
-		masterpiece = func(length)
-		with open(self.root+title+'.txt', 'w', encoding='utf-8') as manuscript :
+		masterpiece = func(**kwargs)
+		with open(title+'.txt', 'w', encoding='utf-8') as manuscript :
 			manuscript.write(masterpiece)
-			signature = re.sub("(^[a-zA-Z])(/)(.)*?", "\1", self.master.capitalize())
+			signature = re.sub("(^[a-zA-Z])(/)([a-zA-Z])(/)(.)*?", "\3", self.master.capitalize())
 			manuscript.write('\n\n\t\t\t\t' + signature)
 				
 if __name__ == "__main__" : 
 	
-	spleener = Misunderstood_genius('collectif')
-	#work_title = spleener.find_title()
-	#spleener.draft_manuscript(title=work_title, func=spleener.compose_structured_poem, length=100)
+	spleener = Misunderstood_genius('hugo')
+	work_title = spleener.find_title()
+	spleener.draft_manuscript(title=work_title, func=spleener.compose_rhyming_poem, length=10, foot=12)
