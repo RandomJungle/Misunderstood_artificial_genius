@@ -10,13 +10,12 @@ from nltk.collocations import *
 
 class Misunderstood_genius:
 	
-	root = "C:/Users/juliette.bourquin/Desktop/writers/"
-	
-	def __init__(self, master) :
+	def __init__(self, master, language) :
 		'''	Constructor. master is a string that names a directory in the same repository that contains all the work from inspiration
 		'''	
-		self.master = master
-		self.reader = PlaintextCorpusReader(self.root+master, r'.*', encoding='utf-8')
+		self.master = 'masters/' + master
+		slef.language = language
+		self.reader = PlaintextCorpusReader(self.master, r'.*', encoding='utf-8')
 		self.text = self.reader.words()
 		
 	def generate_model(self, word, num=50):
@@ -30,9 +29,38 @@ class Misunderstood_genius:
 			word = cfdist[word].max()
 			
 	def count_foot(self, word):
-		vowels = ['a', 'e', 'u', 'i', 'y', 'o']
-		splitword = word.split(vowels)
-		return(len(splitword))
+		''' counts number of foot in word (doesn't account for jonctions for now)
+		'''	
+		startsWithVowel = False
+		if re.match('[aeiouyàéèùôûâêîïöüäëÿ]', word):
+			startsWithVowel = True
+		splitword = re.split(pattern='[aeiouyàéèùôûâêîïöüäëÿ]', string=word, flags=re.IGNORECASE)
+		cleansplit = [el for el in splitword if el is not '']
+		if startsWithVowel :
+			cleansplit.append('vowel')
+		return(len(cleansplit))
+	
+	def phonetize(self, string):
+		''' writes a string into phonemes for rhyming treatment
+		'''
+		if self.language == 'french':
+			phonetic_string = re.sub('(\w)*?(eau|au)(\w)*?', '\1o\3', string)
+			phonetic_string = re.sub('(\w)*?(ay|ai|est)(\w)*?', '\1è\3', string)
+			phonetic_string = re.sub('(\w)*?(oi)(\w)*?', '\1wa\3', string)
+		elif self.language == 'english':
+			phonetic_string = re.sub('(r|c)ough', 'ruf', string)
+			phonetic_string = re.sub('(pl|sl|th|thor)ough(t)?', '\1ow\2', string)
+			phonetic_string = re.sub('through', 'thrue', string)
+		return phonetic_string
+		
+	def check_rhyme(self, language, string, substring):
+		''' checks if the end of a string rhymes with a substring (could this be implemented via machine learning ?)
+		'''
+		pattern = re.sub('(.*?)([aeiouyàéèùôûâêîïöüäëÿ][zrtpmlkjhgfdsqwxcvbn]*?$)', '\2', string)
+		if language == 'french':
+			pattern = re.sub('', '', pattern)
+		elif language == 'english':
+				
 
 	def text_generator(self, word, num=10):
 		''' write a text based on a random choice of word that appear in collocation in master's work
@@ -52,19 +80,23 @@ class Misunderstood_genius:
 		''' write a verse based on previous word used. For now it doesn't actually counts in foot, change that
 		'''	
 		verse = ""
+		counted_foot = 0
 		bigrams = nltk.bigrams(self.text)
 		cfdist = nltk.ConditionalFreqDist(bigrams)
-		for i in range(foot):
+		continueWriting = True
+		while continueWriting:
 			verse += word + ' '
 			word_collocates = []
 			for w in cfdist[word] :
 				word_collocates.append(w)
-			if i < 12 :
+			if counted_foot < foot-2 :
 				word = random.choice(word_collocates)
 			else :
-				rhyming_collocate = [word for word in word_collocates if word.endswith(rhyme)]
+				rhyming_collocate = [word for word in word_collocates if word.endswith(rhyme) and self.count_foot(word) == 2]
 				word = random.choice(rhyming_collocates)
 				verse += word 
+				continueWriting= False
+			counted_foot += self.count_foot(word)
 		return verse
 		
 	def compose_standard_poem(self, length):
@@ -128,6 +160,5 @@ class Misunderstood_genius:
 if __name__ == "__main__" : 
 	
 	spleener = Misunderstood_genius('collectif')
-	print(spleener.count_foot('angels'))
 	#work_title = spleener.find_title()
 	#spleener.draft_manuscript(title=work_title, func=spleener.compose_structured_poem, length=100)
