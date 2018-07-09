@@ -39,19 +39,6 @@ class Misunderstood_genius:
 		if startsWithVowel :
 			cleansplit.append('vowel')
 		return(len(cleansplit))
-	
-	def phonetize(self, string):
-		''' writes a string into phonemes for rhyming treatment
-		'''
-		if self.language == 'french':
-			phonetic_string = re.sub('(\w)*?(eau|au)(\w)*?', '\1o\3', string)
-			phonetic_string = re.sub('(\w)*?(ay|ai|est)(\w)*?', '\1è\3', string)
-			phonetic_string = re.sub('(\w)*?(oi)(\w)*?', '\1wa\3', string)
-		elif self.language == 'english':
-			phonetic_string = re.sub('(r|c)ough', 'ruf', string)
-			phonetic_string = re.sub('(pl|sl|th|thor)ough(t)?', '\1ow\2', string)
-			phonetic_string = re.sub('through', 'thrue', string)
-		return phonetic_string
 		
 	def check_rhyme(self, language, string, substring):
 		''' checks if the end of a string rhymes with a substring (could this be implemented via machine learning ?)
