@@ -13,10 +13,21 @@ class Misunderstood_genius:
 	root = "C:/Users/juliette.bourquin/Desktop/writers/"
 	
 	def __init__(self, master) :
+		'''	Cosntructor. master is a string that names a directory in the same repository that contains all the work from inspiration
+		'''	
 		self.master = master
 		self.reader = PlaintextCorpusReader(self.root+master, r'.*', encoding='utf-8')
 		self.text = self.reader.words()
 		
+	def generate_model(self, word, num=50):
+		'''	write a text based on most probable word to appear after each word. Prone to looping
+		'''
+		bigrams = nltk.bigrams(self.text)
+		cfdist = nltk.ConditionalFreqDist(bigrams)
+		print(cfdist[word].pformat())
+		for i in range(num):
+			print(word, end=' ')
+			word = cfdist[word].max()
 
 	def text_generator(self, word, num=10):
 		'''write a text based on a random choice of word that appear in collocation in master's work
