@@ -1,6 +1,5 @@
 import re
 
-
 def phonetize_from_french(string):
 
     phonetic_string = string.replace('eau', 'o')
