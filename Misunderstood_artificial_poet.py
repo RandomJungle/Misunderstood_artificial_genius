@@ -13,7 +13,7 @@ class Misunderstood_genius:
 	root = "C:/Users/juliette.bourquin/Desktop/writers/"
 	
 	def __init__(self, master) :
-		'''	Cosntructor. master is a string that names a directory in the same repository that contains all the work from inspiration
+		'''	Constructor. master is a string that names a directory in the same repository that contains all the work from inspiration
 		'''	
 		self.master = master
 		self.reader = PlaintextCorpusReader(self.root+master, r'.*', encoding='utf-8')
@@ -28,9 +28,14 @@ class Misunderstood_genius:
 		for i in range(num):
 			print(word, end=' ')
 			word = cfdist[word].max()
+			
+	def count_foot(self, word):
+		vowels = ['a', 'e', 'u', 'i', 'y', 'o']
+		splitword = word.split(vowels)
+		return(len(splitword))
 
 	def text_generator(self, word, num=10):
-		'''write a text based on a random choice of word that appear in collocation in master's work
+		''' write a text based on a random choice of word that appear in collocation in master's work
 		'''
 		verse = ""
 		bigrams = nltk.bigrams(self.text)
@@ -42,7 +47,26 @@ class Misunderstood_genius:
 				word_collocates.append(w)
 			word = random.choice(word_collocates)
 		return verse
-			
+	
+	def rhyme_generator(self, word, rhyme, foot=12):
+		''' write a verse based on previous word used. For now it doesn't actually counts in foot, change that
+		'''	
+		verse = ""
+		bigrams = nltk.bigrams(self.text)
+		cfdist = nltk.ConditionalFreqDist(bigrams)
+		for i in range(foot):
+			verse += word + ' '
+			word_collocates = []
+			for w in cfdist[word] :
+				word_collocates.append(w)
+			if i < 12 :
+				word = random.choice(word_collocates)
+			else :
+				rhyming_collocate = [word for word in word_collocates if word.endswith(rhyme)]
+				word = random.choice(rhyming_collocates)
+				verse += word 
+		return verse
+		
 	def compose_standard_poem(self, length):
 		'''	write a poem with each verse starting with most commons words in master's work
 		'''	
@@ -55,7 +79,7 @@ class Misunderstood_genius:
 		return poem
 			
 	def compose_random_poem(self, length):
-		'''	write a poeam with each verse starting with random words from master's work
+		'''	write a poem with each verse starting with random words from master's work
 		'''
 		poem = ''
 		for word in random.sample([x for x in self.text if re.search('[a-zA-Z]', x) is not None], length):
@@ -63,7 +87,7 @@ class Misunderstood_genius:
 			poem += verse + '\n'
 		return poem
 	
-	def compose_structured_poem(self, length):
+	def compose_prose_poem(self, length):
 		'''	write a text that jumps to line after every n number of words, but is composed of one block only
 		'''	
 		final_work = ""
@@ -75,6 +99,14 @@ class Misunderstood_genius:
 			if i % 10 == 0 :
 				final_work += '\n'
 		return final_work
+	
+	def compose_rhyming_poem(self, length, foot):
+		''' write a poem that rhymes
+		'''	
+		final_work = ""
+		first_word = random.choice([w.lower() for w in self.text if re.search('[a-zA-Z]', w) is not None])
+		first_verse = self.rhyme_generator(word=first_word, foot=12, rhyme='oi')
+			
 	
 	def find_title(self):
 		'''	find the best title to capture the essence of his work, through random search into words
@@ -96,5 +128,6 @@ class Misunderstood_genius:
 if __name__ == "__main__" : 
 	
 	spleener = Misunderstood_genius('collectif')
-	work_title = spleener.find_title()
-	spleener.draft_manuscript(title=work_title, func=spleener.compose_structured_poem, length=100)
+	print(spleener.count_foot('angels'))
+	#work_title = spleener.find_title()
+	#spleener.draft_manuscript(title=work_title, func=spleener.compose_structured_poem, length=100)
