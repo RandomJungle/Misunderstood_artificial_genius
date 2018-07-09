@@ -161,7 +161,7 @@ class Misunderstood_artificial_poet:
 		'''	write a piece of text to a file, send it to everyone in town and wait for the letters of rejection
 		'''
 		masterpiece = func(**kwargs)
-		with open(title+'.txt', 'w', encoding='utf-8') as manuscript :
+		with open('failed_attempts/'+title+'.txt', 'w', encoding='utf-8') as manuscript :
 			manuscript.write(masterpiece)
 			signature = re.sub("(^[a-zA-Z])(/)([a-zA-Z])(/)(.)*?", "\3", self.master.capitalize())
 			manuscript.write('\n\n\t\t\t\t' + signature)
