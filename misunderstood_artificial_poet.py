@@ -131,12 +131,10 @@ class Misunderstood_artificial_poet:
 		final_work = []
 		first_word = random.choice([w.lower() for w in self.text if re.search('[a-zA-Z]', w) is not None])
 		verse = self.rhyme_generator(inputWord=first_word, foot=12, rhyme=None)
-		print(verse)
 		final_work.append(verse)
 		first_word = verse.split(' ')[-1]
 		previous_rhyme = verse[-3:]
 		for i in range(2,length):
-			print(previous_rhyme)
 			if i%2 != 0:
 				verse = self.rhyme_generator(inputWord=first_word, rhyme=None)
 				previous_rhyme = verse[-3:]
@@ -144,11 +142,9 @@ class Misunderstood_artificial_poet:
 			else:
 				verse = self.rhyme_generator(inputWord=first_word, rhyme=previous_rhyme)
 				final_work.append(verse)
-			print(verse)
 		final_work = "\n".join(final_work)
 		return final_work
 			
-	
 	def find_title(self):
 		'''	find the best title to capture the essence of his work, through random search into words
 		'''
